@@ -22,7 +22,7 @@ Si tratta del dump completo del database arXiv, fornito dalla Cornell University
 
 Il dataset è stato inizialmente **caricato all'interno di HDFS**, per poter essere gestito tramite strumenti di elaborazione distribuita. 
 
-## Preprocessing
+## Preprocessing tramite Apache Spark su HDFS
 Inizialmente, il dataset originale è stato prima **filtrato** per selezionare solamente gli articoli appartenenti alla categoria `cs.AI` (Artificial Intelligence).
 Il dataset filtrato è stato poi preprocessato utilizzando **Apache Spark**, con l'obiettivo di:
 - ripulire i testi rimuovendo caratteri indesiderati e formattazioni non necessarie;
@@ -32,7 +32,7 @@ Il dataset filtrato è stato poi preprocessato utilizzando **Apache Spark**, con
 
 Il risultato è un file JSON contenente i chunk di testo associati agli articoli `cs.AI` e con i relativi metadati, già pronti per la fase di embedding.
 
-## Calcolo Distribuito degli Embedding
+## Calcolo Distribuito degli Embedding con Ray tramite modello SentenceTransformers
 
 Una volta ottenuti i chunk, è stata avviata la fase di calcolo degli **embedding vettoriali** mediante l’uso del framework **Ray**, che consente l’elaborazione distribuita e parallela su più nodi del cluster. Per la generazione degli embedding è stato utilizzato il modello `all-MiniLM-L6-v2` fornito dalla libreria **SentenceTransformers**, in grado di produrre rappresentazioni numeriche semanticamente significative dei testi.
 
