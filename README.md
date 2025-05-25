@@ -61,6 +61,8 @@ Come fase finale, il sistema integra un modulo di **valutazione automatica** del
 L'obiettivo di questa parte finale è fornire un sistema oggettivo di **valutazione della qualità** delle risposte generate, simulando il comportamento di un giudice umano.
 
 N.B. Le versioni associate alle tecnologie utilizzate sono elencate nel file InstallRequirements.md
+
+Implementazione del progetto
 ---
 
 ## FASE 1 – Configurazione di rete e delle VM
