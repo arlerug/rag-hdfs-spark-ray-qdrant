@@ -641,6 +641,117 @@ Al termine della fase, il cluster Qdrant risulta completamente attivo:
 - gli embedding sono stati caricati, indicizzati e sono interrogabili con un sistema di **similarità semantica basato su HNSW**.
 
 
+## FASE 6 – Interrogazione del sistema RAG e generazione delle risposte tramite LLM (phi3-mini)
+
+In questa fase è stata sviluppata e testata la pipeline completa di **Retrieval-Augmented Generation (RAG)**, composta da tre momenti chiave: il recupero dei documenti rilevanti, la costruzione del contesto e la generazione delle risposte tramite modello linguistico.
+
+---
+
+### R – Retrieval
+
+A partire da una domanda in linguaggio naturale inserita dall’utente, il sistema calcola l’embedding della query utilizzando il modello `all-MiniLM-L6-v2`. L’embedding viene confrontato con quelli presenti all’interno del vector database **Qdrant**, che restituisce i documenti (chunk testuali) più vicini in termini semantici.
+
+I documenti vengono recuperati dalla collezione `arxiv`, precedentemente popolata con embedding e metadati. I risultati vengono ordinati per similarità e rappresentano la base informativa per la risposta.
+
+---
+
+### A – Augmentation
+
+I chunk recuperati vengono concatenati in un unico testo che costituisce il **contesto informativo** da fornire al modello linguistico. Se il contesto è troppo lungo, viene troncato per rientrare nel limite massimo definito.
+
+Questo contesto viene poi inserito in un prompt strutturato insieme alla domanda, con l'obiettivo di guidare la generazione della risposta in modo che sia fondata solo sulle informazioni realmente presenti nei documenti.
+
+---
+
+### G – Generation
+
+Vengono generate due risposte distinte:
+
+- una **senza contesto**, usando solo la domanda;
+- una **con contesto**, utilizzando la domanda insieme ai documenti recuperati.
+
+Per entrambe è stato utilizzato il modello **phi3-mini**, eseguito localmente tramite **Ollama**. Tuttavia, è possibile configurare lo script per utilizzare anche le **API gratuite di OpenRouter**, particolarmente utile in caso di macchine con risorse limitate.
+
+---
+
+### Valutazione automatica delle risposte
+
+Le due risposte generate vengono inviate a un modello LLM valutatore (**LLaMA 3**, accessibile da OpenRouter), che restituisce un punteggio su cinque aspetti: rilevanza rispetto al contesto, accuratezza, completezza, chiarezza e un punteggio complessivo. Questo passaggio permette di confrontare in modo strutturato e oggettivo le due risposte ottenute.
+
+---
+
+### Interfaccia Streamlit
+
+Tutta la pipeline è stata integrata in una **web app sviluppata con Streamlit**, un framework Python che permette di creare interfacce grafiche web in modo semplice e veloce.
+
+Attraverso l’interfaccia è possibile:
+
+- inserire domande in linguaggio naturale;
+- visualizzare le due risposte (con e senza contesto);
+- confrontare graficamente i punteggi ottenuti tramite un grafico a barre;
+- consultare i documenti usati come base informativa.
+
+Streamlit ha permesso di rendere accessibile il sistema anche a utenti non tecnici, fornendo un’interfaccia interattiva, chiara e reattiva.
+
+---
+
+### Esecuzione
+
+Per avviare il sistema è sufficiente eseguire il seguente comando:
+
+```bash
+python3 pipeline_rag_llm.py
+```
+
+---
+
+
+Il sistema RAG è ora completo e funzionante ed è pronto per essere valutato tramite il modello LLM-as-a-Judge.
+
+
+## FASE 7 – Valutazione automatica tramite LLM-as-a-Judge
+
+Questa fase ha lo scopo di effettuare una **valutazione automatizzata** delle risposte generate dal sistema RAG, utilizzando il paradigma **LLM-as-a-Judge**. È stato realizzato uno script (`batch_evaluator.py`) che, dato un insieme di domande predefinite (elaborate in sequenza come **batch**, ovvero gruppo di input processati in modo automatico e continuo), genera e valuta le risposte prodotte con e senza contesto.
+
+Per ogni domanda, il sistema:
+
+1. Calcola l’embedding e recupera i documenti rilevanti tramite Qdrant.
+2. Genera due risposte: una **senza contesto** (solo la domanda) e una **con contesto** (RAG).
+3. Valuta entrambe le risposte con un LLM esterno (**LLaMA 3**, via OpenRouter), secondo criteri oggettivi.
+4. Salva i risultati nel file `llm_as_a_judge.json`.
+
+---
+
+### Che cos’è LLM-as-a-Judge?
+
+**LLM-as-a-Judge** è una tecnica in cui un **modello linguistico valuta le risposte generate da altri modelli**, assumendo il ruolo di giudice imparziale. In questo progetto, il modello **LLaMA 3** analizza ciascuna risposta sulla base dei seguenti criteri:
+
+- **Relevance** – rilevanza rispetto al contesto documentale
+- **Accuracy** – accuratezza delle informazioni
+- **Completeness** – completezza della risposta
+- **Clarity** – chiarezza espositiva
+- **Overall** – valutazione complessiva (con enfasi sulla rilevanza)
+
+Questo tipo di valutazione automatica consente confronti sistematici e replicabili tra le risposte generate con e senza l’uso del contesto informativo.
+
+---
+
+### Esecuzione dello script
+
+Per eseguire la valutazione batch:
+
+```bash
+python3 batch_evaluator.py
+```
+
+Al termine, i risultati verranno salvati nel file `llm_as_a_judge.json`.
+
+---
+
+### Visualizzazione dei risultati
+
+Al termine della valutazione, il contenuto del file `llm_as_a_judge.json` viene utilizzato per generare **grafici comparativi** delle performance, tramite Bar Chart e HeatMap. I grafici mostrano, per ciascuna domanda, i punteggi ottenuti dalle due modalità di risposta (con RAG e senza), permettendo una lettura immediata dei benefici apportati dall’utilizzo del contesto.
+
 
 
 
