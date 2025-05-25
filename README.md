@@ -787,7 +787,7 @@ Per visualizzare ulteriori dettagli fare riferimento a: https://arxiv.org/abs/24
 
 ### Esecuzione dello script
 
-Per eseguire la valutazione batch:
+Per eseguire la valutazione:
 
 ```bash
 python3 batch_evaluator.py
@@ -799,7 +799,7 @@ Al termine, i risultati verranno salvati nel file `llm_as_a_judge.json`.
 
 ### Visualizzazione dei risultati
 
-Al termine della valutazione, il contenuto del file `llm_as_a_judge.json` viene utilizzato per generare **grafici comparativi** delle performance, tramite Bar Chart e HeatMap. I grafici mostrano, per ciascuna domanda, i punteggi ottenuti dalle due modalità di risposta (con RAG e senza), permettendo una lettura immediata dei benefici apportati dall’utilizzo del contesto.
+Al termine della valutazione, il contenuto del file `llm_as_a_judge.json` viene utilizzato per generare **grafici comparativi** delle performance, tramite Radar Chart e Bar Chart. I grafici mostrano, per ciascuna domanda, i punteggi ottenuti dalle due modalità di risposta (con RAG e senza), permettendo una lettura immediata dei benefici apportati dall’utilizzo del contesto.
 
 <p align="center">
   <img src="images/radar_chart.png" alt="Radar Chart - LLM-as-a-Judge Evaluation" width="600"/>
