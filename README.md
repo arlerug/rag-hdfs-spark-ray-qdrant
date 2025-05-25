@@ -429,6 +429,82 @@ head -n 3 processed_dataset.json | jq .
 Il file risultante contiene i chunk già normalizzati e arricchiti con metadati (id, titolo, autori, anno), ed è pronto per la fase successiva di generazione degli embedding.
 
 
+## FASE 4 – Calcolo distribuito degli embedding con Ray
+
+In questa fase è stato utilizzato Ray, un framework open-source progettato per scalare applicazioni Python in modo efficiente su più nodi. Ray è stato impiegato per generare gli embedding a partire dai chunk testuali ottenuti nella fase precedente, consentendo l'esecuzione parallela dei task tra i nodi del cluster e riducendo significativamente i tempi di elaborazione rispetto a un approccio sequenziale.
+
+### Installazione di Ray e preparazione del cluster (su entrambe le VM)
+
+Installazione di `pip` per Python 3:
+
+sudo apt update  
+sudo apt install python3-pip -y
+
+e verifica installazione con pip3 --version .
+
+Installazione di Ray:
+
+pip install ray
+
+Aggiunta di `~/.local/bin` al `PATH` per rendere eseguibili i binari locali:
+
+echo 'export PATH=$PATH:$HOME/.local/bin' >> ~/.bashrc  
+source ~/.bashrc
+
+### Avvio del cluster Ray
+
+Sul nodo master:
+
+ray start --head --node-ip-address=192.168.100.10 --port=6379
+
+Sul nodo worker:
+
+ray start --address='192.168.100.10:6379' --node-ip-address=192.168.100.11
+
+Verifica dello stato del cluster:
+
+ray status
+
+Se correttamente configurato, si può visualizzare che entrambi i nodi risultano attivi nel cluster Ray ed è pronto per eseguire job distribuiti in parallelo.
+
+---
+
+### Funzionamento di Ray nel progetto
+
+Ray consente l’esecuzione parallela di **funzioni remote** definite come task (`@ray.remote`) su più nodi. In questo progetto, ogni batch di chunk testuali viene processato in parallelo da più worker, che calcolano gli embedding utilizzando il modello `all-MiniLM-L6-v2` della libreria `sentence-transformers`.
+
+Il modello viene caricato una sola volta e condiviso tra i nodi tramite il **Ray object store** (`ray.put()`), evitando di duplicarne il caricamento su ogni processo. I dati in input vengono divisi in batch (es. da 64 elementi) e ogni batch viene inviato a un worker del cluster.
+
+Questo approccio consente di:
+- sfruttare appieno le risorse CPU disponibili su entrambe le VM;
+- scalare il calcolo man mano che aumentano i dati o i nodi;
+- ridurre i tempi di attesa grazie all’esecuzione concorrente delle operazioni.
+
+---
+
+### Calcolo degli embedding
+
+Assicurarsi che il file `processed_dataset.json` sia disponibile localmente sul nodo master.
+
+Installare la libreria `sentence-transformers` per il calcolo degli embedding (su entrambe le VM):
+
+pip3 install sentence-transformers
+
+Creazione dello script `ray_embeddings.py`, che:
+- carica il modello `all-MiniLM-L6-v2`;
+- divide i chunk in batch;
+- distribuisce ogni batch come task remoto su Ray;
+- raccoglie gli embedding calcolati e li salva in un file JSON.
+
+Esecuzione dello script dal nodo master:
+
+python3 ray_embeddings.py
+
+Al termine dell’esecuzione viene generato il file `embedded_chunks.json`, contenente tutti i chunk con i rispettivi embedding e metadati.
+
+Questo file è l’output finale della fase di rappresentazione semantica dei dati ed è pronto per essere caricato in un vector database per il retrieval.
+
+
 
 
 
