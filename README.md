@@ -152,7 +152,6 @@ Alla prima connessione, è stato necessario confermare con `yes` e inserire la p
 ssh diabd@worker
 
 
-```markdown
 ## FASE 2 – Installazione e configurazione di HDFS (Hadoop Distributed File System)
 
 Questa fase include l’installazione di Java e Hadoop su entrambe le VM, la configurazione dei file principali su master, la copia della configurazione sul nodo worker, l’inizializzazione del filesystem distribuito HDFS e il caricamento del dataset su HDFS per l’elaborazione successiva.
@@ -266,30 +265,20 @@ Su entrambe le macchine (master e worker), aprire il file:
 
 nano ~/hadoop/etc/hadoop/hadoop-env.sh
 
-Trovare la riga:
+Trovare la riga commentata " # export JAVA_HOME= ... "
 
-```
-# export JAVA_HOME=
-```
+e modificarla in "
 
-Modificare in:
-
-```
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-```
+
 
 Sul nodo master, riavviare HDFS:
 
-```
 stop-dfs.sh  
 start-dfs.sh
-```
 
-Successivamente, verificare i processi attivi:
 
-```
-jps
-```
+Successivamente, verificare i processi attivi con il comando jps:
 
 Sul master devono essere visibili: NameNode, DataNode, SecondaryNameNode  
 Sul worker deve essere visibile: DataNode
@@ -302,37 +291,27 @@ e salvato nella directory `/home/diabd/` del nodo master.
 
 Creazione della directory in HDFS:
 
-```
 hdfs dfs -mkdir /dataset
-```
 
 Caricamento del dataset:
 
-```
 hdfs dfs -put arxiv-metadata-oai-snapshot.json /dataset/
-```
 
 Verifica della presenza del file:
 
-```
 hdfs dfs -ls /dataset
-```
 
 L’output atteso conferma che il file è stato caricato correttamente:
 
-```
 -rw-r--r--   1 diabd supergroup 4.5G  /dataset/arxiv-metadata-oai-snapshot.json
-```
 
 Verifica della distribuzione dei blocchi su HDFS:
 
-```
 hdfs fsck /dataset/arxiv-metadata-oai-snapshot.json -files -blocks -locations
-```
 
 L’output di questo comando consente di controllare che i blocchi del file siano effettivamente replicati e distribuiti tra i nodi master e worker, come previsto dalla configurazione.  
 Nel nostro caso sono presenti 35 blocchi distribuiti, valore coerente considerando che la dimensione predefinita dei blocchi in HDFS è di 128 MB.
-```
+
 
 
 
