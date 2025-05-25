@@ -690,6 +690,8 @@ Per utilizzare `phi3-mini` tramite Ollama, è sufficiente eseguire i seguenti co
 sudo snap install ollama
 ollama pull phi3
 ```
+**Nota**: lo script principale utilizza il modello Gemma 3B tramite API key.
+L'uso di phi3 con Ollama è un'alternativa locale, utile per ambienti offline o senza accesso a servizi cloud.
 
 ---
 
