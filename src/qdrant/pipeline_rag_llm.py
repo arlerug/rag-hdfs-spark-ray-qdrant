@@ -12,7 +12,7 @@ COLLECTION_NAME = "arxiv"
 QDRANT_HOST = "192.168.100.10"
 QDRANT_PORT = 6333
 TOP_K = 7
-MAX_CONTEXT_CHARS = 4000
+MAX_CONTEXT_CHARS = 6000
 
 openai.api_key = "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"
 openai.api_base = "https://openrouter.ai/api/v1"
@@ -82,26 +82,37 @@ def evaluate_answer(question, answer, context=""):
     prompt = f"""
 You are evaluating the quality of an answer in relation to a specific context of retrieved documents.
 
+The documents provided define the intended domain of the question. Your evaluation must consider not only whether the answer is accurate and well-written, but especially whether it is grounded in the given context.
+
+Pay extra attention to the Relevance score: it must reflect how much the answer aligns with the topic and content of the retrieved documents. If the answer talks about something unrelated or not found in the context, give a low Relevance score.
+
 Evaluate using the following 4 criteria, assigning a rating from 1 to 5 for each:
+
 1. Relevance to the context  
 2. Accuracy  
 3. Completeness  
 4. Clarity  
-Overall: weighted by relevance
+
+Then give an Overall score from 1 to 5, where Relevance has more weight than the other criteria.
 
 ---
 Question: {question}
-Context:
+
+Context (retrieved documents):
 {context}
+
 Answer:
 {answer}
+
 ---
 Respond in this format:
+
 - Relevance: 2/5  
 - Accuracy: 1/5  
 - Completeness: 0/5  
 - Clarity: 5/5  
 - Overall: 3/5  
+
 Explanation: ...
 """
     try:
@@ -161,7 +172,11 @@ if st.button("Get Answer"):
             rag_prompt = f"""
 You are an AI assistant specialized in reading and summarizing scientific papers.
 
-Use the context below to answer the question. Be precise and do not invent information.
+Use the information provided in the context to answer the question as thoroughly and precisely as possible. 
+Explain all relevant aspects you can infer from the context.
+
+If the answer is not found in the context, clearly state that the information is missing. 
+Do not invent information.
 
 Context:
 {full_context}
