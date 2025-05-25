@@ -1,6 +1,6 @@
 Versioni Software e Librerie utilizzate
 
-## Sistema operativo
+## Sistema operativo VM
 
 - Ubuntu 22.04.5 LTS
 
