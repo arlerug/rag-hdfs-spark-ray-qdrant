@@ -152,7 +152,8 @@ Alla prima connessione, è stato necessario confermare con `yes` e inserire la p
 ssh diabd@worker
 
 
-## FASE 2 – Installazione e configurazione di HDFS (Hadoop Distribuited File System)
+```markdown
+## FASE 2 – Installazione e configurazione di HDFS (Hadoop Distributed File System)
 
 Questa fase include l’installazione di Java e Hadoop su entrambe le VM, la configurazione dei file principali su master, la copia della configurazione sul nodo worker, l’inizializzazione del filesystem distribuito HDFS e il caricamento del dataset su HDFS per l’elaborazione successiva.
 
@@ -176,9 +177,11 @@ nano ~/.bashrc
 
 Aggiungere in fondo al file:
 
+```
 export HADOOP_HOME=/home/diabd/hadoop  
 export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin  
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+```
 
 Applicare le modifiche:
 
@@ -192,52 +195,60 @@ Modifica dei file di configurazione nella directory `~/hadoop/etc/hadoop`.
 
 nano ~/hadoop/etc/hadoop/core-site.xml
 
-'''
-<configuration>  
-  <property>  
-    <name>fs.defaultFS</name>  
-    <value>hdfs://master:9000</value>  
-  </property>  
+Contenuto:
+
+```
+<configuration>
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://master:9000</value>
+  </property>
 </configuration>
-'''
+```
 
 #### hdfs-site.xml
 
 nano ~/hadoop/etc/hadoop/hdfs-site.xml
 
-'''
-<configuration>  
-  <property>  
-    <name>dfs.replication</name>  
-    <value>2</value>  
-  </property>  
-  <property>  
-    <name>dfs.namenode.name.dir</name>  
-    <value>file:///home/diabd/hadoopdata/dfs/name</value>  
-  </property>  
-  <property>  
-    <name>dfs.datanode.data.dir</name>  
-    <value>file:///home/diabd/hadoopdata/dfs/data</value>  
-  </property>  
+Contenuto:
+
+```
+<configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>2</value>
+  </property>
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:///home/diabd/hadoopdata/dfs/name</value>
+  </property>
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file:///home/diabd/hadoopdata/dfs/data</value>
+  </property>
 </configuration>
-'''
+```
 
 #### workers
 
 nano ~/hadoop/etc/hadoop/workers
 
-'''
+Contenuto:
+
+```
 master  
 worker
-'''
+```
 
 #### masters
 
 nano ~/hadoop/etc/hadoop/masters
 
-'''
+Contenuto:
+
+```
 master
-'''
+```
 
 ### Copia della configurazione Hadoop al nodo worker
 
@@ -257,16 +268,28 @@ nano ~/hadoop/etc/hadoop/hadoop-env.sh
 
 Trovare la riga:
 
-# export JAVA_HOME= ...  e modificarla in:
+```
+# export JAVA_HOME=
+```
 
+Modificare in:
+
+```
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+```
 
-Sul nodo master, riavviare HDFS 
+Sul nodo master, riavviare HDFS:
 
+```
 stop-dfs.sh  
 start-dfs.sh
+```
 
-e successivamente verificare i processi attivi tramite il comando jps .
+Successivamente, verificare i processi attivi:
+
+```
+jps
+```
 
 Sul master devono essere visibili: NameNode, DataNode, SecondaryNameNode  
 Sul worker deve essere visibile: DataNode
@@ -279,26 +302,38 @@ e salvato nella directory `/home/diabd/` del nodo master.
 
 Creazione della directory in HDFS:
 
+```
 hdfs dfs -mkdir /dataset
+```
 
 Caricamento del dataset:
 
+```
 hdfs dfs -put arxiv-metadata-oai-snapshot.json /dataset/
+```
 
 Verifica della presenza del file:
 
+```
 hdfs dfs -ls /dataset
+```
 
 L’output atteso conferma che il file è stato caricato correttamente:
 
+```
 -rw-r--r--   1 diabd supergroup 4.5G  /dataset/arxiv-metadata-oai-snapshot.json
+```
 
 Verifica della distribuzione dei blocchi su HDFS:
 
+```
 hdfs fsck /dataset/arxiv-metadata-oai-snapshot.json -files -blocks -locations
+```
 
-L’output di questo comando consente di controllare che i blocchi del file siano effettivamente replicati e distribuiti tra i nodi master e worker, come previsto dalla configurazione.
-Nel nostro caso abbiamo 35 blocchi distribuiti: ciò è legittimo dato che i blocchi in HDFS sono da 128 MB.
+L’output di questo comando consente di controllare che i blocchi del file siano effettivamente replicati e distribuiti tra i nodi master e worker, come previsto dalla configurazione.  
+Nel nostro caso sono presenti 35 blocchi distribuiti, valore coerente considerando che la dimensione predefinita dei blocchi in HDFS è di 128 MB.
+```
+
 
 
 
