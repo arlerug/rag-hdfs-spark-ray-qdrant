@@ -46,7 +46,7 @@ Il file risultante contenente tutti gli embedding e i relativi metadati è stato
 
 ## Generazione delle Risposte con LLM puro e LLM + RAG
 
-Una volta indicizzati i documenti, è stato realizzato uno script che implementa il comportamento completo del sistema RAG: a partire da una **query in linguaggio naturale** inserita dall’utente, il sistema effettua il retrieval dei documenti più rilevanti tramite Qdrant, ed elabora una risposta **contestualizzata** utilizzando il modello linguistico **Gemma 3B** , chiamato ed eseguito tramite API gratuite fornite da https://openrouter.ai/ oppure **phi3-mini** scaricato ed eseguito localmente.
+Una volta indicizzati i documenti, è stato realizzato uno script che implementa il comportamento completo del sistema RAG: a partire da una **query in linguaggio naturale** inserita dall’utente, il sistema effettua il retrieval dei documenti più rilevanti tramite Qdrant, ed elabora una risposta **contestualizzata** utilizzando il modello linguistico **Gemma 3B** , chiamato ed eseguito tramite API gratuite fornite da https://openrouter.ai/ oppure **phi3** scaricato ed eseguito localmente.
 
 Viene inoltre generata una seconda risposta senza contesto, ottenuta direttamente dall' LLM  **senza l’uso di documenti di contesto**, al fine di permettere un confronto tra i due approcci e verificarne la qualità in base ad alcuni criteri..
 
