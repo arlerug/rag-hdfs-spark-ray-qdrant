@@ -2,10 +2,10 @@ import os
 import json
 import requests
 import streamlit as st
+import plotly.graph_objects as go
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 import openai
-import matplotlib.pyplot as plt
 import re
 
 COLLECTION_NAME = "arxiv"
@@ -14,10 +14,28 @@ QDRANT_PORT = 6333
 TOP_K = 7
 MAX_CONTEXT_CHARS = 4000
 
-openai.api_key = "your-api-key"
+openai.api_key = "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"
 openai.api_base = "https://openrouter.ai/api/v1"
 
-st.set_page_config(page_title="RAG with Qdrant & OpenRouter", layout="wide")
+st.set_page_config(page_title="Scientific Q&A Assistant", layout="wide")
+
+st.markdown("""
+<style>
+h1, h2, h3 {
+    font-family: 'Segoe UI', sans-serif;
+}
+.stButton > button {
+    background-color: #1f77b4;
+    color: white;
+    border-radius: 8px;
+    font-size: 16px;
+    padding: 10px 20px;
+}
+.stTextInput > div > input {
+    border-radius: 8px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 @st.cache_resource
 def load_model():
@@ -64,37 +82,26 @@ def evaluate_answer(question, answer, context=""):
     prompt = f"""
 You are evaluating the quality of an answer in relation to a specific context of retrieved documents.
 
-The documents provided define the intended domain of the question. Your evaluation must consider not only whether the answer is accurate and well-written, but especially whether it is grounded in the given context.
-
-Pay extra attention to the Relevance score: it must reflect how much the answer aligns with the topic and content of the retrieved documents. If the answer talks about something unrelated or not found in the context, give a low Relevance score.
-
 Evaluate using the following 4 criteria, assigning a rating from 1 to 5 for each:
-
 1. Relevance to the context  
 2. Accuracy  
 3. Completeness  
 4. Clarity  
-
-Then give an Overall score from 1 to 5, where Relevance has more weight than the other criteria.
+Overall: weighted by relevance
 
 ---
 Question: {question}
-
-Context (retrieved documents):
+Context:
 {context}
-
 Answer:
 {answer}
-
 ---
 Respond in this format:
-
 - Relevance: 2/5  
 - Accuracy: 1/5  
 - Completeness: 0/5  
 - Clarity: 5/5  
 - Overall: 3/5  
-
 Explanation: ...
 """
     try:
@@ -106,10 +113,10 @@ Explanation: ...
     except Exception as e:
         return f"Evaluation error:\n{e}"
 
-st.title("RAG with Qdrant + Gemma (OpenRouter)")
-query = st.text_input("Enter your question", placeholder="e.g., What is a transformer?")
+st.title("Scientific Q&A Assistant")
+query = st.text_input("Ask a scientific question", placeholder="e.g., What is a transformer?")
 
-if st.button("Search"):
+if st.button("Get Answer"):
     if not query.strip():
         st.warning("Please enter a valid question.")
         st.stop()
@@ -140,19 +147,21 @@ if st.button("Search"):
         if len(full_context) > MAX_CONTEXT_CHARS:
             full_context = full_context[:MAX_CONTEXT_CHARS] + "..."
 
-    st.subheader("Answer (without context)")
-    with st.spinner("Generating..."):
-        response_no_context = get_ollama_response(query)
+    tab1, tab2, tab3 = st.tabs(["Answer", "Evaluation", "References"])
 
-    st.subheader("Answer (with context)")
-    rag_prompt = f"""
+    with tab1:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Answer (without context)")
+            with st.spinner("Generating..."):
+                response_no_context = get_ollama_response(query)
+
+        with col2:
+            st.subheader("Answer (with context)")
+            rag_prompt = f"""
 You are an AI assistant specialized in reading and summarizing scientific papers.
 
-Use the information provided in the context to answer the question as thoroughly and precisely as possible. 
-Explain all relevant aspects you can infer from the context.
-
-If the answer is not found in the context, clearly state that the information is missing. 
-Do not invent information.
+Use the context below to answer the question. Be precise and do not invent information.
 
 Context:
 {full_context}
@@ -162,54 +171,45 @@ Question:
 
 Answer:
 """
-    with st.spinner("Generating..."):
-        response_rag = get_ollama_response(rag_prompt)
+            with st.spinner("Generating..."):
+                response_rag = get_ollama_response(rag_prompt)
 
-    st.subheader("Evaluation (via LLaMA 3 on OpenRouter)")
+    with tab2:
+        st.subheader("Evaluation Comparison")
 
-    with st.spinner("Evaluating response without context..."):
-        rating_no_context = evaluate_answer(query, response_no_context, full_context)
-    st.markdown("No-context answer evaluation:")
-    st.success(rating_no_context)
+        with st.spinner("Evaluating responses..."):
+            rating_no_context = evaluate_answer(query, response_no_context, full_context)
+            rating_with_context = evaluate_answer(query, response_rag, full_context)
 
-    with st.spinner("Evaluating response with context (RAG)..."):
-        rating_with_context = evaluate_answer(query, response_rag, full_context)
-    st.markdown("RAG answer evaluation:")
-    st.success(rating_with_context)
+        def extract_scores(text):
+            scores = {}
+            for line in text.splitlines():
+                match = re.match(r"- (\w+): (\d)/5", line.strip())
+                if match:
+                    scores[match[1]] = int(match[2])
+            return scores
 
-    # Parse evaluation text to extract scores
-    def extract_scores(text):
-        scores = {}
-        for line in text.splitlines():
-            match = re.match(r"- (\w+): (\d)/5", line.strip())
-            if match:
-                scores[match[1]] = int(match[2])
-        return scores
+        scores_no = extract_scores(rating_no_context)
+        scores_with = extract_scores(rating_with_context)
 
-    scores_no = extract_scores(rating_no_context)
-    scores_with = extract_scores(rating_with_context)
+        metrics = list(scores_no.keys())
+        vals_no = [scores_no.get(m, 0) for m in metrics]
+        vals_with = [scores_with.get(m, 0) for m in metrics]
 
-    metrics = list(scores_no.keys())
-    vals_no = [scores_no.get(m, 0) for m in metrics]
-    vals_with = [scores_with.get(m, 0) for m in metrics]
+        fig = go.Figure(data=[
+            go.Bar(name='No Context', x=metrics, y=vals_no),
+            go.Bar(name='With Context', x=metrics, y=vals_with)
+        ])
+        fig.update_layout(barmode='group', title="Evaluation Comparison", yaxis=dict(range=[0,5]))
+        st.plotly_chart(fig)
 
-    fig, ax = plt.subplots(figsize=(8, 4))
-    x = range(len(metrics))
-    bar_width = 0.35
+        st.subheader("Evaluation details")
+        st.markdown("**No-context answer evaluation:**")
+        st.success(rating_no_context)
+        st.markdown("**RAG answer evaluation:**")
+        st.success(rating_with_context)
 
-    ax.bar([i - bar_width/2 for i in x], vals_no, bar_width, label="No Context")
-    ax.bar([i + bar_width/2 for i in x], vals_with, bar_width, label="With Context")
-
-    ax.set_xticks(x)
-    ax.set_xticklabels(metrics)
-    ax.set_ylim(0, 5)
-    ax.set_ylabel("Score")
-    ax.set_title("Evaluation Comparison")
-    ax.legend()
-
-    st.subheader("Evaluation Comparison Chart")
-    st.pyplot(fig)
-
-    st.subheader("Retrieved documents")
-    for ref in references:
-        st.markdown(f"- **{ref['title']}** ({ref['year']}) — *{ref['authors']}* — `ID: {ref['id']}`")
+    with tab3:
+        st.subheader("Retrieved documents")
+        for ref in references:
+            st.markdown(f"- **{ref['title']}** ({ref['year']}) — *{ref['authors']}* — `ID: {ref['id']}`")
