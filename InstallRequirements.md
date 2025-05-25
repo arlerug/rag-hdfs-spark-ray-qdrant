@@ -27,12 +27,14 @@ Versioni Software e Librerie utilizzate
 
 ## Docker
 
-- docker 24.x
-- docker-compose 1.29.x
+- **Docker** 28.1.1, build 4eba377  
+- **Docker Compose** 1.29.2, build unknown  
+- **docker-py** 5.0.3
 
 ## Qdrant
 
-- qdrant/qdrant:v1.6.1 (Docker image)
+- **Docker image**: `qdrant/qdrant:v1.6.1`    
+- **Client Python**: `qdrant-client==1.6.1
 
 ## Ollama
 
@@ -41,12 +43,16 @@ Versioni Software e Librerie utilizzate
 
 ## Python packages
 
-- pyspark 3.4.1
-- nltk 3.8
-- tqdm
-- sentence-transformers 2.2
-- qdrant-client 1.6
-- openai 1.10
-- streamlit 1.30
-- matplotlib
-- requests
+| Libreria                | Versione             |
+|-------------------------|----------------------|
+| `openai`                | 0.28.0               |
+| `qdrant-client`         | 1.6.1                |
+| `sentence-transformers` | 4.1.0                |
+| `streamlit`             | 1.45.1               |
+| `torch`                 | 2.7.0                |
+| `plotly`                | 6.1.1                |
+| `requests`              | 2.32.3               |
+| `pyspark`               | 3.4.1                |
+| `nltk`                  | 3.8                  |
+| `tqdm`                  | ultima disponibile   |
+| `matplotlib`            | ultima disponibile   |
