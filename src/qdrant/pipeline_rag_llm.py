@@ -14,7 +14,7 @@ QDRANT_PORT = 6333
 TOP_K = 7
 MAX_CONTEXT_CHARS = 4000
 
-openai.api_key = "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"
+openai.api_key = "your-api-key"
 openai.api_base = "https://openrouter.ai/api/v1"
 
 st.set_page_config(page_title="RAG with Qdrant & OpenRouter", layout="wide")
