@@ -1,6 +1,7 @@
 # RAG 4 AI
-# Sistema Distribuito di Retrieval-Augmented Generation (RAG) per documenti su AI con con HDFS, Spark, Ray, Qdrant e LLM-as-a-Judge
-## Authors: Alessandra Ruggeri e Daniele Angeloni
+## Sistema Distribuito di Retrieval-Augmented Generation (RAG) per documenti su AI con HDFS, Spark, Ray, Qdrant e LLM-as-a-Judge
+### Authors: Alessandra Ruggeri e Daniele Angeloni
+
 
 ## Introduzione
 
