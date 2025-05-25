@@ -419,6 +419,10 @@ Gli script sono stati eseguiti dal nodo master utilizzando:
 
 $SPARK_HOME/bin/spark-submit --master spark://master:7077 nome_script.py
 
+<p align="center">
+  <img src="images/spark_dashboard.png" alt="Apache Spark Dashboard" width="600"/>
+</p>
+
 ### Verifica dell’output
 
 Verifica del contenuto della directory HDFS risultante:
@@ -640,8 +644,12 @@ Al termine della fase, il cluster Qdrant risulta completamente attivo:
 - il nodo `worker` gestisce la replica e la distribuzione degli shard,
 - gli embedding sono stati caricati, indicizzati e sono interrogabili con un sistema di **similarità semantica basato su HNSW**.
 
+<p align="center">
+  <img src="images/qdrant_cluster.png" alt="Qdrant Cluster Status" width="600"/>
+</p>
 
-## FASE 6 – Interrogazione del sistema RAG e generazione delle risposte tramite LLM (phi3-mini)
+
+## FASE 6 – Interrogazione del sistema RAG e generazione delle risposte tramite LLM
 
 In questa fase è stata sviluppata e testata la pipeline completa di **Retrieval-Augmented Generation (RAG)**, composta da tre momenti chiave: il recupero dei documenti rilevanti, la costruzione del contesto e la generazione delle risposte tramite modello linguistico.
 
@@ -653,11 +661,15 @@ A partire da una domanda in linguaggio naturale inserita dall’utente, il siste
 
 I documenti vengono recuperati dalla collezione `arxiv`, precedentemente popolata con embedding e metadati. I risultati vengono ordinati per similarità e rappresentano la base informativa per la risposta.
 
+---
+
 ### A – Augmentation
 
 I chunk recuperati vengono concatenati in un unico testo che costituisce il **contesto informativo** da fornire al modello linguistico. Se il contesto è troppo lungo, viene troncato per rientrare nel limite massimo definito.
 
 Questo contesto viene poi inserito in un prompt strutturato insieme alla domanda, con l'obiettivo di guidare la generazione della risposta in modo che sia fondata solo sulle informazioni realmente presenti nei documenti.
+
+---
 
 ### G – Generation
 
@@ -667,6 +679,26 @@ Vengono generate due risposte distinte:
 - una **con contesto**, utilizzando la domanda insieme ai documenti recuperati.
 
 Per entrambe è stato utilizzato il modello **phi3-mini**, eseguito localmente tramite **Ollama**. Tuttavia, è possibile configurare lo script per utilizzare anche le **API gratuite di OpenRouter**, particolarmente utile in caso di macchine con risorse limitate.
+
+#### Installazione del modello LLM in locale
+
+Per utilizzare `phi3-mini` tramite Ollama, è sufficiente eseguire i seguenti comandi:
+
+```bash
+sudo snap install ollama
+ollama pull phi3
+```
+
+---
+
+### Prompt Engineering
+
+Per ottenere risposte precise, pertinenti e coerenti, è stato fondamentale progettare correttamente i prompt forniti al modello. Sono stati definiti prompt istruttivi, capaci di:
+- definire il ruolo del modello (es. assistente esperto nella lettura di articoli scientifici),
+- guidare la generazione senza inventare informazioni non presenti,
+- stimolare risposte complete e ben strutturate.
+
+Questa parte di **prompt engineering** ha avuto un impatto diretto sulla qualità e affidabilità delle risposte, specialmente nella modalità con contesto.
 
 ---
 
@@ -689,17 +721,19 @@ Attraverso l’interfaccia è possibile:
 
 Streamlit ha permesso di rendere accessibile il sistema anche a utenti non tecnici, fornendo un’interfaccia interattiva, chiara e reattiva.
 
+---
 
 ### Esecuzione
 
 Per avviare il sistema è sufficiente eseguire il seguente comando:
 
-```bash
+```
 python3 pipeline_rag_llm.py
 ```
 
-
 Il sistema RAG è ora completo e funzionante ed è pronto per essere valutato tramite il modello LLM-as-a-Judge.
+```
+
 
 
 ## FASE 7 – Valutazione automatica tramite LLM-as-a-Judge
@@ -746,6 +780,9 @@ Al termine, i risultati verranno salvati nel file `llm_as_a_judge.json`.
 
 Al termine della valutazione, il contenuto del file `llm_as_a_judge.json` viene utilizzato per generare **grafici comparativi** delle performance, tramite Bar Chart e HeatMap. I grafici mostrano, per ciascuna domanda, i punteggi ottenuti dalle due modalità di risposta (con RAG e senza), permettendo una lettura immediata dei benefici apportati dall’utilizzo del contesto.
 
+<p align="center">
+  <img src="images/overall_comparison_LLMasaJudge.png" alt="Overall Comparison - LLM as a Judge" width="600"/>
+</p>
 
 
 
