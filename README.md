@@ -253,7 +253,7 @@ master
 
 Dalla macchina master:
 
-scp -r ~/hadoop diabd@worker:~
+'scp -r ~/hadoop diabd@worker:~'
 
 ### Formattazione del Namenode e avvio HDFS
 
@@ -311,6 +311,122 @@ hdfs fsck /dataset/arxiv-metadata-oai-snapshot.json -files -blocks -locations
 
 L’output di questo comando consente di controllare che i blocchi del file siano effettivamente replicati e distribuiti tra i nodi master e worker, come previsto dalla configurazione.  
 Nel nostro caso sono presenti 35 blocchi distribuiti, valore coerente considerando che la dimensione predefinita dei blocchi in HDFS è di 128 MB.
+
+
+## FASE 3 – Preprocessing distribuito con Apache Spark nel cluster
+
+In questa fase è stato utilizzato Apache Spark in modalità Standalone distribuita per eseguire il preprocessing del dataset arXiv in parallelo sul cluster (master e worker). L’obiettivo era filtrare gli articoli appartenenti alla categoria `cs.AI` e generare chunk testuali a partire dagli abstract, in modo da preparare i dati per la fase successiva di embedding.
+
+### Installazione di Apache Spark (su entrambe le VM)
+
+cd ~  
+wget https://archive.apache.org/dist/spark/spark-3.4.1/spark-3.4.1-bin-hadoop3.tgz  
+tar -xvzf spark-3.4.1-bin-hadoop3.tgz  
+mv spark-3.4.1-bin-hadoop3 spark
+
+Configurazione delle variabili d’ambiente:
+
+nano ~/.bashrc
+
+Aggiungere in fondo:
+
+export SPARK_HOME=/home/diabd/spark  
+export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin  
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+
+Applicare:
+
+source ~/.bashrc
+
+Verifica dell’installazione:
+
+spark-shell --version
+
+### Configurazione del cluster Spark distribuito
+
+Abilitazione e modifica del file `spark-env.sh`:
+
+cp $SPARK_HOME/conf/spark-env.sh.template $SPARK_HOME/conf/spark-env.sh  
+nano $SPARK_HOME/conf/spark-env.sh
+
+Configurazione su master:
+
+export SPARK_MASTER_HOST=master  
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64  
+export SPARK_WORKER_CORES=2  
+export SPARK_WORKER_MEMORY=2g
+
+Configurazione su worker:
+
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64  
+export SPARK_WORKER_CORES=2  
+export SPARK_WORKER_MEMORY=2g
+
+Avvio del cluster Spark:
+
+Sul master:  
+$SPARK_HOME/sbin/start-master.sh  
+$SPARK_HOME/sbin/start-worker.sh spark://master:7077
+
+Sul worker:  
+$SPARK_HOME/sbin/start-worker.sh spark://master:7077
+
+Controllo del cluster dal browser:  
+http://192.168.100.10:8080  
+Devono risultare visibili entrambi i nodi (1 master + 1 worker).
+
+### Installazione di PySpark e NLTK (su entrambe le VM)
+
+pip3 install pyspark nltk
+
+Configurazione dei dati NLTK (Natural Language Toolkit) :
+
+python3  
+>>> import nltk  
+>>> nltk.download('punkt')  
+>>> exit()
+
+Definizione del path locale per i dati NLTK:
+
+nano ~/.bashrc
+
+Aggiungere:
+
+export NLTK_DATA=/home/diabd/nltk_data
+
+Applicare:
+
+mkdir -p /home/diabd/nltk_data  
+python3 -m nltk.downloader -d /home/diabd/nltk_data punkt  
+source ~/.bashrc
+
+### Esecuzione degli script Spark
+
+Sono stati creati ed eseguiti due script PySpark per l’elaborazione distribuita del dataset:
+
+- `spark_filter_ai.py`: effettua il filtraggio degli articoli scientifici appartenenti alla categoria `cs.AI`, producendo in output il file `arxiv_ai_filtered.json` salvato su HDFS.
+  
+- `spark_preprocess.py`: esegue il preprocessing degli abstract e la creazione dei chunk testuali (2 frasi per chunk), producendo il file `processed_dataset.json` salvato su HDFS.
+
+Gli script sono stati eseguiti dal nodo master utilizzando:
+
+$SPARK_HOME/bin/spark-submit --master spark://master:7077 nome_script.py
+
+### Verifica dell’output
+
+Verifica del contenuto della directory HDFS risultante:
+
+hdfs dfs -ls /dataset/processed_dataset.json
+
+Dato che l’output è distribuito in più partizioni, è stato unificato in un singolo file locale:
+
+hdfs dfs -getmerge /dataset/processed_dataset.json processed_dataset.json
+
+Controllo del contenuto unificato:
+
+head -n 3 processed_dataset.json | jq .
+
+Il file risultante contiene i chunk già normalizzati e arricchiti con metadati (id, titolo, autori, anno), ed è pronto per la fase successiva di generazione degli embedding.
 
 
 
