@@ -781,8 +781,10 @@ Al termine, i risultati verranno salvati nel file `llm_as_a_judge.json`.
 Al termine della valutazione, il contenuto del file `llm_as_a_judge.json` viene utilizzato per generare **grafici comparativi** delle performance, tramite Bar Chart e HeatMap. I grafici mostrano, per ciascuna domanda, i punteggi ottenuti dalle due modalità di risposta (con RAG e senza), permettendo una lettura immediata dei benefici apportati dall’utilizzo del contesto.
 
 <p align="center">
-  <img src="images/radar_chart.png" alt="Radar Chart of Comparison" width="600"/>
+  <img src="images/radar_chart.png" alt="Radar Chart - LLM-as-a-Judge Evaluation" width="600"/>
 </p>
+
+---
 
 <p align="center">
   <img src="images/overall_comparison_LLMasaJudge.png" alt="Overall Comparison - LLM as a Judge" width="600"/>
