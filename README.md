@@ -706,10 +706,13 @@ Questa parte di **prompt engineering** ha avuto un impatto diretto sulla qualit�
 
 ---
 
-### Valutazione automatica delle risposte
+### Valutazione automatica delle risposte tramite LLM-as-a-Judge
 
-Le due risposte generate vengono inviate a un modello LLM valutatore (**LLaMA 3**, accessibile da OpenRouter), che restituisce un punteggio su cinque aspetti: rilevanza rispetto al contesto, accuratezza, completezza, chiarezza e un punteggio complessivo. Questo passaggio permette di confrontare in modo strutturato e oggettivo le due risposte ottenute.
+Le due risposte generate vengono inviate a un modello LLM valutatore (**LLaMA 3**, accessibile tramite api-key fornite da OpenRouter), che restituisce un punteggio su cinque aspetti: rilevanza rispetto al contesto, accuratezza, completezza, chiarezza e un punteggio complessivo. Questo passaggio permette di confrontare in modo strutturato e oggettivo le due risposte ottenute. LLM-as-a-Judge sarà spiegato dettagliatamente nella fase succesiva.
 
+<p align="center">
+  <img src="images/evaluation_details.png" alt="Evaluation Details" width="600"/>
+</p>
 ---
 
 ### Interfaccia Streamlit
@@ -721,9 +724,19 @@ Attraverso l’interfaccia è possibile:
 - inserire domande in linguaggio naturale;
 - visualizzare le due risposte (con e senza contesto);
 - confrontare graficamente i punteggi ottenuti tramite un grafico a barre;
-- consultare i documenti usati come base informativa.
+- consultare i documenti usati come base informativa e i metadati associati ad essi.
 
-Streamlit ha permesso di rendere accessibile il sistema anche a utenti non tecnici, fornendo un’interfaccia interattiva, chiara e reattiva.
+<p align="center">
+  <img src="images/streamlit_interface.png" alt="Streamlit Interface" width="600"/>
+</p>
+
+<p align="center">
+  <img src="images/single_evalution_graph.png" alt="Single Evaluation Graph" width="600"/>
+</p>
+
+<p align="center">
+  <img src="images/retrieved_documents.png" alt="Retrieved Documents" width="600"/>
+</p>
 
 ---
 
@@ -736,7 +749,7 @@ python3 pipeline_rag_llm.py
 ```
 
 Il sistema RAG è ora completo e funzionante ed è pronto per essere valutato tramite il modello LLM-as-a-Judge.
-```
+
 
 
 
