@@ -192,18 +192,21 @@ Modifica dei file di configurazione nella directory `~/hadoop/etc/hadoop`.
 
 nano ~/hadoop/etc/hadoop/core-site.xml
 
-'''<configuration>  
+'''
+<configuration>  
   <property>  
     <name>fs.defaultFS</name>  
     <value>hdfs://master:9000</value>  
   </property>  
-</configuration>'''
+</configuration>
+'''
 
 #### hdfs-site.xml
 
 nano ~/hadoop/etc/hadoop/hdfs-site.xml
 
-'''<configuration>  
+'''
+<configuration>  
   <property>  
     <name>dfs.replication</name>  
     <value>2</value>  
@@ -216,20 +219,25 @@ nano ~/hadoop/etc/hadoop/hdfs-site.xml
     <name>dfs.datanode.data.dir</name>  
     <value>file:///home/diabd/hadoopdata/dfs/data</value>  
   </property>  
-</configuration>'''
+</configuration>
+'''
 
 #### workers
 
 nano ~/hadoop/etc/hadoop/workers
 
-'''master  
-worker'''
+'''
+master  
+worker
+'''
 
 #### masters
 
 nano ~/hadoop/etc/hadoop/masters
 
-'''master'''
+'''
+master
+'''
 
 ### Copia della configurazione Hadoop al nodo worker
 
