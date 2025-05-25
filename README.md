@@ -73,20 +73,25 @@ sudo hostnamectl set-hostname worker
 
 Dopo la modifica, entrambe le VM sono state riavviate e per assegnare un IP statico alla VM master, è stato modificato il file di configurazione di Netplan /etc/netplan/01-netcfg.yaml:
 
-'''network:
+```
+network:
   version: 2
   ethernets:
     enp0s8:
       dhcp4: no
-      addresses: [192.168.100.10/24]'''
+      addresses: [192.168.100.10/24]
+```
 
 Sulla VM worker, è stato configurato lo stesso file con il contenuto seguente:
-'''network:
+
+```
+network:
   version: 2
   ethernets:
     enp0s8:
       dhcp4: no
-      addresses: [192.168.100.11/24]'''
+      addresses: [192.168.100.11/24]
+```
 
 E' importante attuare l' applicazione delle modifiche in tutti e due i nodi tramite il comando:
 sudo netplan apply
@@ -94,8 +99,10 @@ sudo netplan apply
 Successivamente è stato aggiornato il file /etc/hosts su entrambe le VM nel file /etc/hosts per avere una mappatura indirizzoIP-nome:
 
 Sono state aggiunte in fondo le seguenti righe:
+```
 192.168.100.10    master
 192.168.100.11    worker
+```
 
 Infine, è stata verificata la connettività tra le due macchine virtuali tramite i seguenti comandi:
 
@@ -503,6 +510,136 @@ python3 ray_embeddings.py
 Al termine dell’esecuzione viene generato il file `embedded_chunks.json`, contenente tutti i chunk con i rispettivi embedding e metadati.
 
 Questo file è l’output finale della fase di rappresentazione semantica dei dati ed è pronto per essere caricato in un vector database per il retrieval.
+
+
+
+## FASE 5 – Caricamento degli embedding su Qdrant (vector database distribuito)
+
+In questa fase è stato utilizzato **Qdrant**, un motore di ricerca vettoriale open-source, per l’indicizzazione semantica degli embedding generati nella fase precedente. La configurazione è avvenuta in modalità distribuita su due nodi, utilizzando container Docker su entrambe le VM (`master` e `worker`).
+
+Qdrant è stato configurato come cluster, dove il nodo `master` agisce da leader e il nodo `worker` da follower. Gli embedding vengono caricati dal nodo master tramite uno script Python, e indicizzati per abilitare il successivo retrieval semantico basato su similarità.
+
+### Configurazione del cluster Qdrant
+
+Sul nodo `master` e sul nodo `worker` è stata creata la seguente struttura:
+
+mkdir -p ~/qdrant_cluster/data  
+cd ~/qdrant_cluster
+
+All’interno della directory sono stati posizionati:
+- un file `docker-compose.yml` personalizzato,
+- la cartella `data/` utilizzata come volume per la persistenza dei dati.
+
+#### File `docker-compose.yml` sul nodo master (192.168.100.10)
+
+Configurazione del container `qdrant_master` con cluster attivo:
+
+```
+services:
+  qdrant_master:
+    image: qdrant/qdrant:v1.6.1
+    container_name: qdrant_master
+    restart: always
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+      - "6335:6335"
+    volumes:
+      - ./data:/qdrant/storage
+    environment:
+      QDRANT__CLUSTER__ENABLED: "true"
+      QDRANT__LOG_LEVEL: "INFO"
+    command: "./qdrant --uri http://192.168.100.10:6335"
+```
+
+#### File `docker-compose.yml` sul nodo worker (192.168.100.11)
+
+Configurazione del container `qdrant_worker`, collegato al master:
+
+```
+services:
+  qdrant_worker:
+    image: qdrant/qdrant:v1.6.1
+    container_name: qdrant_worker
+    restart: always
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+      - "6335:6335"
+    volumes:
+      - ./data:/qdrant/storage
+    environment:
+      QDRANT__CLUSTER__ENABLED: "true"
+      QDRANT__LOG_LEVEL: "INFO"
+    command: "./qdrant --bootstrap http://192.168.100.10:6335 --uri http://192.168.100.11:6335"
+```
+
+### Avvio dei container Docker
+
+Sul nodo master:
+
+cd ~/qdrant_cluster  
+sudo docker compose up -d
+
+Attendere 5-10 secondi, quindi avviare anche sul nodo worker:
+
+cd ~/qdrant_cluster  
+sudo docker compose up -d
+
+### Verifica del cluster
+
+Sul master:
+
+curl http://localhost:6333/cluster | jq
+
+L’output deve mostrare lo stato `Leader` e i peer connessi.
+
+Sul worker:
+
+curl http://localhost:6333/cluster | jq
+
+Lo stato visualizzato dovrebbe essere `Follower`.
+
+### Caricamento degli embedding in Qdrant
+
+Sul nodo master, dove è presente il file `embedded_chunks.json`, è stato creato uno script Python chiamato `upload_to_qdrant.py`.
+
+Questo script:
+- legge il file contenente gli embedding,
+- crea (se non esiste) una collection chiamata `arxiv` su Qdrant,
+- imposta il metodo di indicizzazione **HNSW** (Hierarchical Navigable Small World),
+- carica gli embedding a batch da 100 elementi,
+- assegna ad ogni punto una chiave UUID e un payload con i metadati (id, titolo, autori, anno, chunk).
+
+L’indicizzazione tramite **HNSW** consente ricerche vettoriali efficienti in tempo sub-lineare, mantenendo un buon bilanciamento tra precisione e velocità, anche in presenza di grandi volumi di dati distribuiti.
+
+### Installazione della libreria client
+
+Su master e worker:
+
+pip3 install qdrant-client
+
+### Esecuzione dello script
+
+Sul nodo master:
+
+python3 upload_to_qdrant.py
+
+Al termine, viene stampato il numero totale di embedding caricati e la conferma dell’avvenuta indicizzazione.
+
+### Visualizzazione dello stato del database
+
+È possibile accedere alla dashboard di Qdrant tramite browser:
+
+http://localhost:6333/dashboard
+
+---
+
+Al termine della fase, il cluster Qdrant risulta completamente attivo:
+- il nodo `master` agisce da coordinatore e punto di ingresso,
+- il nodo `worker` gestisce la replica e la distribuzione degli shard,
+- gli embedding sono stati caricati, indicizzati e sono interrogabili con un sistema di **similarità semantica basato su HNSW**.
+
 
 
 
