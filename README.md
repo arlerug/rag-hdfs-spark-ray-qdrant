@@ -653,15 +653,11 @@ A partire da una domanda in linguaggio naturale inserita dall’utente, il siste
 
 I documenti vengono recuperati dalla collezione `arxiv`, precedentemente popolata con embedding e metadati. I risultati vengono ordinati per similarità e rappresentano la base informativa per la risposta.
 
----
-
 ### A – Augmentation
 
 I chunk recuperati vengono concatenati in un unico testo che costituisce il **contesto informativo** da fornire al modello linguistico. Se il contesto è troppo lungo, viene troncato per rientrare nel limite massimo definito.
 
 Questo contesto viene poi inserito in un prompt strutturato insieme alla domanda, con l'obiettivo di guidare la generazione della risposta in modo che sia fondata solo sulle informazioni realmente presenti nei documenti.
-
----
 
 ### G – Generation
 
@@ -693,7 +689,6 @@ Attraverso l’interfaccia è possibile:
 
 Streamlit ha permesso di rendere accessibile il sistema anche a utenti non tecnici, fornendo un’interfaccia interattiva, chiara e reattiva.
 
----
 
 ### Esecuzione
 
@@ -702,8 +697,6 @@ Per avviare il sistema è sufficiente eseguire il seguente comando:
 ```bash
 python3 pipeline_rag_llm.py
 ```
-
----
 
 
 Il sistema RAG è ora completo e funzionante ed è pronto per essere valutato tramite il modello LLM-as-a-Judge.
@@ -722,7 +715,7 @@ Per ogni domanda, il sistema:
 
 ---
 
-### Che cos’è LLM-as-a-Judge?
+### LLM-as-a-Judge
 
 **LLM-as-a-Judge** è una tecnica in cui un **modello linguistico valuta le risposte generate da altri modelli**, assumendo il ruolo di giudice imparziale. In questo progetto, il modello **LLaMA 3** analizza ciascuna risposta sulla base dei seguenti criteri:
 
@@ -733,6 +726,7 @@ Per ogni domanda, il sistema:
 - **Overall** – valutazione complessiva (con enfasi sulla rilevanza)
 
 Questo tipo di valutazione automatica consente confronti sistematici e replicabili tra le risposte generate con e senza l’uso del contesto informativo.
+Per visualizzare ulteriori dettagli fare riferimento a: https://arxiv.org/abs/2411.15594 .
 
 ---
 
