@@ -37,7 +37,7 @@ Versioni Software e Librerie utilizzate
 ## Ollama
 
 - ollama (ultima versione via snap)
-- modello: phi3-mini
+- modello: phi3
 
 ## Python packages
 
