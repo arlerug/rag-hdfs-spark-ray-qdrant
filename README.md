@@ -266,7 +266,7 @@ master
 
 Dalla macchina master:
 
-scp -r ~/hadoop diabd@worker: ~ 
+`scp -r ~/hadoop diabd@worker:~`
 
 ### Formattazione del Namenode e avvio HDFS
 
