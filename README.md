@@ -10,6 +10,12 @@ Questo progetto ha l’obiettivo di costruire un sistema distribuito in grado di
 
 Il progetto si articola in più fasi, a partire dalla distribuzione, gestione e preprocessamento di un dataset scientifico di grandi dimensioni, fino all’indicizzazione semantica dei documenti tramite embeddings, al caricamento e indicizzazione in un database vettoriale e alla generazione contestualizzata delle risposte tramite modello linguistico. In fase finale, il sistema è anche in grado di valutare automaticamente la qualità delle risposte generate attraverso l'uso di un 'LLM as a Judge'.
 
+
+<p align="center">
+  <img src="images/architettura.png" alt="Architettura del sistema" width="400"/>
+</p>
+
+
 ## Dataset
 
 Il dataset utilizzato è stato scaricato da Kaggle al seguente link:  
