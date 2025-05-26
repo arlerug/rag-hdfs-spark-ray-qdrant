@@ -32,7 +32,7 @@ Il dataset filtrato è stato poi preprocessato con l'obiettivo di:
 - normalizzare il contenuto degli abstract;
 - suddividere ciascun abstract in uno o più **chunk** testuali coerenti, pronti per la successiva elaborazione semantica;
 - estrazione dei metadati (come ID dell’articolo, titolo, e categoria) che saranno utilizzati in fase di risposta per arricchire il contesto.
-Queste operazioni sono state effettuate tramite **Apache Spark** nella modalità standalone.
+Queste operazioni sono state effettuate tramite **Apache Spark** nella modalità standalone. 
 
 Il risultato è un file JSON contenente i chunk di testo associati agli articoli `cs.AI` e con i relativi metadati, già pronti per la fase di embedding.
 
@@ -55,7 +55,7 @@ Viene inoltre generata una seconda risposta senza contesto, ottenuta direttament
 Come fase finale, il sistema integra un modulo di **valutazione automatica** delle risposte, basato sul paradigma *LLM-as-a-Judge*. Viene utilizzato il modello linguistico **LLaMA 3**, accessibile tramite le **API gratuite di OpenRouter**, per confrontare le due risposte (quella "pura" e quella RAG) secondo criteri quali:
 - completezza,
 - accuratezza,
-- coerenza,
+- chiarezza,
 - aderenza al contesto.
 
 L'obiettivo di questa parte finale è fornire un sistema oggettivo di **valutazione della qualità** delle risposte generate, simulando il comportamento di un giudice umano.
@@ -525,9 +525,9 @@ Questo file è l’output finale della fase di rappresentazione semantica dei da
 
 ## FASE 5 – Caricamento degli embedding su Qdrant (vector database distribuito)
 
-In questa fase è stato utilizzato **Qdrant**, un motore di ricerca vettoriale open-source, per l’indicizzazione semantica degli embedding generati nella fase precedente. La configurazione è avvenuta in modalità distribuita su due nodi, utilizzando container Docker su entrambe le VM (`master` e `worker`).
+In questa fase è stato utilizzato **Qdrant**, un database vettoriale opensource, per l’indicizzazione semantica degli embedding generati nella fase precedente. La configurazione è avvenuta in modalità distribuita su due nodi, utilizzando container Docker su entrambe le VM (`master` e `worker`).
 
-Qdrant è stato configurato come cluster, dove il nodo `master` agisce da leader e il nodo `worker` da follower. Gli embedding vengono caricati dal nodo master tramite uno script Python, e indicizzati per abilitare il successivo retrieval semantico basato su similarità.
+Qdrant è stato configurato come cluster, dove il nodo `master` agisce da leader e il nodo `worker` da follower. Gli embedding vengono caricati dal nodo master tramite uno script Python, e indicizzati per abilitare il successivo retrieval semantico basato su similarità tramite HNSW.
 
 ### Configurazione del cluster Qdrant
 
@@ -663,7 +663,7 @@ In questa fase è stata sviluppata e testata la pipeline completa di **Retrieval
 
 ### R – Retrieval
 
-A partire da una domanda in linguaggio naturale inserita dall’utente, il sistema calcola l’embedding della query utilizzando il modello `all-MiniLM-L6-v2`. L’embedding viene confrontato con quelli presenti all’interno del vector database **Qdrant**, che restituisce i documenti (chunk testuali) più vicini in termini semantici.
+A partire da una domanda in linguaggio naturale inserita dall’utente, il sistema calcola l’embedding della query utilizzando il modello `all-MiniLM-L6-v2` (lo stesso usato per calcolare gli embedding del dataset). L’embedding viene confrontato con quelli presenti all’interno del vector database **Qdrant**, che restituisce i documenti (chunk testuali) più vicini in termini semantici utilizzando la cosine distance.
 
 I documenti vengono recuperati dalla collezione `arxiv`, precedentemente popolata con embedding e metadati. I risultati vengono ordinati per similarità e rappresentano la base informativa per la risposta.
 
