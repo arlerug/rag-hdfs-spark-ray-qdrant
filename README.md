@@ -12,7 +12,7 @@ Il progetto si articola in più fasi, a partire dalla distribuzione, gestione e 
 
 
 <p align="center">
-  <img src="images/architettura.png" alt="Architettura del sistema" width="400"/>
+  <img src="images/architettura.png" alt="Architettura del sistema" width="800"/>
 </p>
 
 
