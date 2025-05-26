@@ -665,6 +665,8 @@ In questa fase è stata sviluppata e testata la pipeline completa di **Retrieval
 
 A partire da una domanda in linguaggio naturale inserita dall’utente, il sistema calcola l’embedding della query utilizzando il modello `all-MiniLM-L6-v2` (lo stesso usato per calcolare gli embedding del dataset). L’embedding viene confrontato con quelli presenti all’interno del vector database **Qdrant**, che restituisce i documenti (chunk testuali) più vicini in termini semantici utilizzando la cosine distance.
 
+La distanza coseno misura la differenza di orientamento tra due vettori, ignorando la loro lunghezza. È calcolata come 1 - cos(θ), dove θ è l’angolo tra i due vettori. È particolarmente adatta per confrontare embedding testuali, poiché valuta quanto due vettori "puntano" nella stessa direzione, indipendentemente dalla loro magnitudine.
+
 I documenti vengono recuperati dalla collezione `arxiv`, precedentemente popolata con embedding e metadati. I risultati vengono ordinati per similarità e rappresentano la base informativa per la risposta.
 
 ---
@@ -675,6 +677,13 @@ I chunk recuperati vengono concatenati in un unico testo che costituisce il **co
 
 Questo contesto viene poi inserito in un prompt strutturato insieme alla domanda, con l'obiettivo di guidare la generazione della risposta in modo che sia fondata solo sulle informazioni realmente presenti nei documenti.
 
+Per ottenere risposte precise, pertinenti e coerenti, è stato fondamentale progettare correttamente i prompt forniti al modello. Sono stati definiti prompt istruttivi, capaci di:
+- definire il ruolo del modello (es. assistente esperto nella lettura di articoli scientifici),
+- guidare la generazione senza inventare informazioni non presenti,
+- stimolare risposte complete e ben strutturate.
+
+Questa parte di **prompt engineering** ha avuto un impatto diretto sulla qualità e affidabilità delle risposte, specialmente nella modalità con contesto.
+
 ---
 
 ### G – Generation
@@ -684,11 +693,11 @@ Vengono generate due risposte distinte:
 - una **senza contesto**, usando solo la domanda;
 - una **con contesto**, utilizzando la domanda insieme ai documenti recuperati.
 
-Per entrambe è stato utilizzato il modello **phi3-mini**, eseguito localmente tramite **Ollama**. Tuttavia, è possibile configurare lo script per utilizzare anche le **API gratuite di OpenRouter**, particolarmente utile in caso di macchine con risorse limitate.
+Per entrambe le generazioni è stato utilizzato il modello **Gemma3B** di Google, eseguito tramite le API gratuite di OpenRouter. Tuttavia, è possibile configurare lo script per utilizzare anche un modello locale, come **phi-3**, eseguibile in locale tramite Ollama.
 
 #### Installazione del modello LLM in locale
 
-Per utilizzare `phi3-mini` tramite Ollama, è sufficiente eseguire i seguenti comandi:
+Per utilizzare `phi3` tramite Ollama, è sufficiente eseguire i seguenti comandi:
 
 ```bash
 sudo snap install ollama
@@ -696,17 +705,6 @@ ollama pull phi3
 ```
 **Nota**: lo script principale utilizza il modello Gemma 3B tramite API key.
 L'uso di phi3 con Ollama è un'alternativa locale, utile per ambienti offline o senza accesso a servizi cloud.
-
----
-
-### Prompt Engineering
-
-Per ottenere risposte precise, pertinenti e coerenti, è stato fondamentale progettare correttamente i prompt forniti al modello. Sono stati definiti prompt istruttivi, capaci di:
-- definire il ruolo del modello (es. assistente esperto nella lettura di articoli scientifici),
-- guidare la generazione senza inventare informazioni non presenti,
-- stimolare risposte complete e ben strutturate.
-
-Questa parte di **prompt engineering** ha avuto un impatto diretto sulla qualità e affidabilità delle risposte, specialmente nella modalità con contesto.
 
 ---
 
@@ -802,7 +800,7 @@ Al termine, i risultati verranno salvati nel file `llm_as_a_judge.json`.
 Al termine della valutazione, il contenuto del file `llm_as_a_judge.json` viene utilizzato per generare **grafici comparativi** delle performance, tramite Radar Chart e Bar Chart. I grafici mostrano, per ciascuna domanda, i punteggi ottenuti dalle due modalità di risposta (con RAG e senza), permettendo una lettura immediata dei benefici apportati dall’utilizzo del contesto.
 
 <p align="center">
-  <img src="images/radar_chart.png" alt="Radar Chart - LLM-as-a-Judge Evaluation" width="600"/>
+  <img src="images/radar_chart.png" alt="Radar Chart - LLM-as-a-Judge Evaluation" width="400"/>
 </p>
 
 ---
