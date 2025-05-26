@@ -266,7 +266,7 @@ master
 
 Dalla macchina master:
 
-'scp -r ~/hadoop diabd@worker:~'
+scp -r ~/hadoop diabd@worker: ~ 
 
 ### Formattazione del Namenode e avvio HDFS
 
@@ -488,7 +488,7 @@ Se correttamente configurato, si può visualizzare che entrambi i nodi risultano
 
 ### Funzionamento di Ray nel progetto
 
-Ray consente l’esecuzione parallela di **funzioni remote** definite come task (`@ray.remote`) su più nodi. In questo progetto, ogni batch di chunk testuali viene processato in parallelo da più worker, che calcolano gli embedding utilizzando il modello `all-MiniLM-L6-v2` della libreria `sentence-transformers`.
+Ray consente l’esecuzione parallela di **funzioni remote** definite come task (`@ray.remote`) su più nodi. In questo progetto, ogni batch di chunk testuali viene processato in parallelo da più worker, che calcolano gli embedding utilizzando il modello `all-MiniLM-L6-v2` della libreria `sentence-transformers` che genera vettori di dimensione 384.
 
 Il modello viene caricato una sola volta e condiviso tra i nodi tramite il **Ray object store** (`ray.put()`), evitando di duplicarne il caricamento su ogni processo. I dati in input vengono divisi in batch (es. da 64 elementi) e ogni batch viene inviato a un worker del cluster.
 
